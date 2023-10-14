@@ -1,13 +1,13 @@
 package by.belyahovich;
 
-import java.util.Optional;
+import java.util.Set;
 
 public interface CustomFileReader {
 
     void saveMystery(Mystery mystery);
 
-    Iterable<Mystery> getAllMystery();
+    Set<Mystery> getAllMystery();
 
-    Optional<Mystery> getRandomMystery();
+    Mystery getRandomMystery();
 
 }
