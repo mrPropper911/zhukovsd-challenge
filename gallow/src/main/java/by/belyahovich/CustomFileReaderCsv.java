@@ -1,29 +1,27 @@
 package by.belyahovich;
 
 
-
-
-
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 public class CustomFileReaderCsv implements CustomFileReader {
 
     private static final Logger log = LogManager.getLogger(CustomFileReaderCsv.class);
-
-    private static volatile CustomFileReaderCsv instance;
     private static final String PATH_OF_CSV_FILE_WITH_WORDS = "gallow/src/main/resources/vocabulary.txt";
+    private static volatile CustomFileReaderCsv instance;
 
-
-    public static CustomFileReaderCsv getInstance(){
+    public static CustomFileReaderCsv getInstance() {
         CustomFileReaderCsv localInstance = instance;
-        if (localInstance == null){
-            synchronized (CustomFileReaderCsv.class){
+        if (localInstance == null) {
+            synchronized (CustomFileReaderCsv.class) {
                 localInstance = instance;
-                if (localInstance == null){
+                if (localInstance == null) {
                     instance = localInstance = new CustomFileReaderCsv();
                 }
             }
@@ -46,20 +44,29 @@ public class CustomFileReaderCsv implements CustomFileReader {
     }
 
     @Override
+    public Mystery getRandomMystery() {
+        List<Mystery> allMystery = getAllMystery()
+                .stream()
+                .toList();
+        int randomIndexOfMystery = new Random()
+                .nextInt(allMystery.size());
+        return allMystery.get(randomIndexOfMystery);
+    }
+
     public Set<Mystery> getAllMystery() {
         File file = new File(PATH_OF_CSV_FILE_WITH_WORDS);
         Set<Mystery> allMystery = new HashSet<>();
 
         try {
             FileInputStream fileInputStream = new FileInputStream(file);
-            for (;;){
+            for (; ; ) {
                 try {
                     ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
                     Object mystery = objectInputStream.readObject();
-                    if (mystery instanceof Mystery){
+                    if (mystery instanceof Mystery) {
                         allMystery.add((Mystery) mystery);
                     }
-                } catch (EOFException e){
+                } catch (EOFException e) {
                     break;
                 }
             }
@@ -67,15 +74,5 @@ public class CustomFileReaderCsv implements CustomFileReader {
             log.error(e.getStackTrace());
         }
         return allMystery;
-    }
-
-    @Override
-    public Mystery getRandomMystery() {
-        List<Mystery> allMystery = getAllMystery()
-                .stream()
-                .toList();
-        int randomIndexOfMystery= new Random()
-                .nextInt(allMystery.size());
-        return allMystery.get(randomIndexOfMystery);
     }
 }
