@@ -1,4 +1,4 @@
 package by.belyahovich;
 
-public class UI {
+public class ConsoleUI {
 }
