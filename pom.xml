@@ -11,6 +11,7 @@
     <modules>
         <module>gallow</module>
         <module>simulation</module>
+        <module>exchange</module>
     </modules>
 
     <properties>
