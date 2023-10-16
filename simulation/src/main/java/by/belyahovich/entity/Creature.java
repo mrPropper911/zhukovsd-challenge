@@ -1,6 +1,7 @@
 package by.belyahovich.entity;
 
 import java.security.SecureRandom;
+import java.util.Random;
 
 public abstract class Creature extends Entity {
 
@@ -10,13 +11,13 @@ public abstract class Creature extends Entity {
     private final long speed;
     private final long hp;
 
+    abstract void move();
+
     public Creature() {
         SecureRandom secureRandom = new SecureRandom();
-        speed = secureRandom.nextLong(MAX_SPEED - 1) + 1;//1 - MAX_SPEED
-        hp = secureRandom.nextLong(MAX_HP);//1 - MAX_HP
+        speed = secureRandom.nextLong(MAX_SPEED) + 1;
+        hp = secureRandom.nextLong(MAX_HP) + 1;
     }
-
-    abstract void move();
 
     public long getSpeed() {
         return speed;
