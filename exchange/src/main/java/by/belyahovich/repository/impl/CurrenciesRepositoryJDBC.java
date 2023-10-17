@@ -6,6 +6,9 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
@@ -162,7 +165,29 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
 
     @Override
     public Iterable<Currencies> getAll() {
-        return null;
+        List<Currencies> currenciesList = new ArrayList<>(Collections.emptyList());
+        try {
+            connection = DriverManager.getConnection(DB_URL);
+
+            String querySelectAll = """
+                    select * from currencies
+                    """;
+            PreparedStatement preparedStatement = connection.prepareStatement(querySelectAll);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()){
+                currenciesList.add(Currencies.newBuilder()
+                        .setId(resultSet.getInt("id"))
+                        .setCode(resultSet.getString("code"))
+                        .setFullName(resultSet.getString("full_name"))
+                        .setSign(resultSet.getString("sign"))
+                        .build());
+            }
+            log.info("Get all currency successful");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return currenciesList;
     }
 
     @Override
@@ -191,6 +216,7 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
             log.info("Get by code successful: " + code);
 
         } catch (SQLException e) {
+            log.error("Error Get by code:" + code);
             log.error(e.getMessage());
             e.printStackTrace();
         }
