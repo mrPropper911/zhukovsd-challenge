@@ -1,9 +1,19 @@
 package by.belyahovich.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Currencies {
+
+    @JsonProperty("id")
     private int id;
+
+    @JsonProperty("code")
     private String code;
+
+    @JsonProperty("full_name")
     private String fullName;
+
+    @JsonProperty("sign")
     private String sign;
 
     public static Builder newBuilder() {

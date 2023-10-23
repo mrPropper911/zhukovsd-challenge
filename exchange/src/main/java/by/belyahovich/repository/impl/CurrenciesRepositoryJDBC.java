@@ -4,6 +4,7 @@ import by.belyahovich.domain.Currencies;
 import by.belyahovich.repository.CurrenciesRepository;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.sqlite.JDBC;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -13,9 +14,33 @@ import java.util.Optional;
 
 public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
 
-    private static final String DB_URL = "jdbc:sqlite:D:/CodeProgram/zhukovsd-challenge/exchange/src/main/resources/exchange.db";
+    private static final String DB_URL = "jdbc:sqlite:D:\\CodeProgram\\zhukovsd-challenge\\exchange\\src\\main\\resources\\exchange.db";
     private static final Logger log = LogManager.getLogger(CurrenciesRepositoryJDBC.class);
     private static Connection connection;
+    private static volatile CurrenciesRepositoryJDBC instance;
+
+    static {
+        try {
+            java.sql.DriverManager.registerDriver(new JDBC());
+        } catch (SQLException E) {
+            throw new RuntimeException("Can't register driver!");
+        }
+    }
+
+
+    public static CurrenciesRepositoryJDBC getInstance() {
+        CurrenciesRepositoryJDBC localInstance = instance;
+        if (localInstance == null) {
+            synchronized (CurrenciesRepositoryJDBC.class) {
+                localInstance = instance;
+                if (localInstance == null) {
+                    instance = localInstance = new CurrenciesRepositoryJDBC();
+                }
+            }
+        }
+        return localInstance;
+    }
+
 
     public static void initTables() {
         try {
@@ -175,7 +200,7 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
             PreparedStatement preparedStatement = connection.prepareStatement(querySelectAll);
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            while (resultSet.next()){
+            while (resultSet.next()) {
                 currenciesList.add(Currencies.newBuilder()
                         .setId(resultSet.getInt("id"))
                         .setCode(resultSet.getString("code"))
@@ -185,7 +210,7 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
             }
             log.info("Get all currency successful");
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException();
         }
         return currenciesList;
     }
@@ -203,7 +228,7 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
             preparedStatement.setString(1, code);
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            if (!resultSet.isBeforeFirst()){
+            if (!resultSet.isBeforeFirst()) {
                 return Optional.empty();
             }
 
@@ -218,7 +243,7 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
         } catch (SQLException e) {
             log.error("Error Get by code:" + code);
             log.error(e.getMessage());
-            e.printStackTrace();
+            throw new RuntimeException();
         }
 
         return Optional.ofNullable(currencies);
