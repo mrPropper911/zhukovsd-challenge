@@ -5,6 +5,7 @@ import by.belyahovich.service.CurrenciesService;
 import by.belyahovich.service.impl.CurrenciesServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Optional;
 
+@WebServlet(name = "CurrencyController", urlPatterns = "/api/v1/currency/*")
 public class CurrencyController extends HttpServlet {
 
     private final CurrenciesService currenciesService = new CurrenciesServiceImpl();
@@ -37,7 +39,6 @@ public class CurrencyController extends HttpServlet {
                 PrintWriter printWriter = resp.getWriter();
                 printWriter.print(currenciesJson);
                 printWriter.flush();
-
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

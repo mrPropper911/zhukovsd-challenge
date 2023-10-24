@@ -22,6 +22,8 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
     static {
         try {
             java.sql.DriverManager.registerDriver(new JDBC());
+            initTables();
+            initCurrenciesData();
         } catch (SQLException E) {
             throw new RuntimeException("Can't register driver!");
         }
@@ -159,32 +161,43 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
     }
 
     @Override
-    public void save(Currencies currencies) {
+    public Currencies save(Currencies currencies) throws SQLException {
         try {
             connection = DriverManager.getConnection(DB_URL);
             connection.setAutoCommit(false);
+
             String querySaveCurrencies = """
                     insert into currencies (code, full_name, sign) VALUES (?, ?, ?)
                     """;
+
             PreparedStatement preparedStatement =
-                    connection.prepareStatement(querySaveCurrencies, PreparedStatement.RETURN_GENERATED_KEYS);
+                    connection.prepareStatement(querySaveCurrencies);
             preparedStatement.setString(1, currencies.getCode());
             preparedStatement.setString(2, currencies.getFullName());
             preparedStatement.setString(3, currencies.getSign());
-            preparedStatement.execute();
+            int affectedRows = preparedStatement.executeUpdate();
+
+            if (affectedRows == 0) {
+                log.error("Error: not row affected after update");
+                throw new SQLException("Creating currencies failed, not row affected");
+            }
+
+            //get id saved currencies
+            Statement statement = connection.createStatement();
+            ResultSet generatedKeys = statement.executeQuery("select  last_insert_rowid()");
+            if (generatedKeys.next()) {
+                currencies.setId(generatedKeys.getInt(1));
+            }
             connection.commit();
 
             log.info("Transaction commit");
             log.info("Save currencies succeed: " + currencies.getCode());
+            return currencies;
+
         } catch (SQLException e) {
-            try {
-                connection.rollback();
-                log.error("Transaction rollback");
-                log.error(e.getMessage());
-            } catch (Exception ex) {
-                log.error("Transaction rollback exception");
-                ex.printStackTrace();
-            }
+            connection.rollback();
+            log.error("Transaction rollback...");
+            throw new SQLException();
         }
     }
 
