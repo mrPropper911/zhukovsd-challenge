@@ -1,32 +1,44 @@
 package by.belyahovich.repository.impl;
 
 import by.belyahovich.domain.Currencies;
+import by.belyahovich.repository.BasicConnectionPool;
+import by.belyahovich.repository.ConnectionPool;
 import by.belyahovich.repository.CurrenciesRepository;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.sqlite.JDBC;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
 
-    private static final String DB_URL = "jdbc:sqlite:D:\\CodeProgram\\zhukovsd-challenge\\exchange\\src\\main\\resources\\exchange.db";
     private static final Logger log = LogManager.getLogger(CurrenciesRepositoryJDBC.class);
-    private static Connection connection;
+    private static final ConnectionPool connectionPool;
+    private static String DB_URL;
     private static volatile CurrenciesRepositoryJDBC instance;
 
     static {
-        try {
-            java.sql.DriverManager.registerDriver(new JDBC());
-            initTables();
-            initCurrenciesData();
-        } catch (SQLException E) {
-            throw new RuntimeException("Can't register driver!");
+        InputStream resourceAsStream = CurrenciesRepositoryJDBC.class.getResourceAsStream("/config.properties");
+        if (resourceAsStream != null) {
+            Properties properties = new Properties();
+            try {
+                properties.load(resourceAsStream);
+            } catch (IOException e) {
+                log.error("Properties load exception: " + e.getMessage());
+                throw new RuntimeException(e);
+            }
+            DB_URL = properties.getProperty("db.url");
+        } else {
+            log.error("Resources config.properties not found");
         }
+        connectionPool = BasicConnectionPool.create(DB_URL);
+
+        //init data
+        initTables();
+        initCurrenciesData();
+        initExchangeRatesData();
     }
 
 
@@ -43,10 +55,15 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
         return localInstance;
     }
 
-
     public static void initTables() {
+        Connection connection = null;
         try {
-            connection = DriverManager.getConnection(DB_URL);
+            connection = connectionPool.getConnection();
+        } catch (SQLException e) {
+            log.error("Error get connection: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+        try {
             String queryDropTableCurrencies = """
                     drop table if exists currencies
                     """;
@@ -79,14 +96,27 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
 
             log.info("Init tables successful");
         } catch (SQLException e) {
-            log.error(e.getMessage());
+            log.error("Init database exception: " + e.getMessage());
             throw new RuntimeException(e);
+        } finally {
+            boolean releaseConnection = connectionPool.releaseConnection(connection);
+            if (releaseConnection) {
+                log.info("ConnectionPool release");
+            } else {
+                log.error("ConnectionPool release error");
+            }
         }
     }
 
     public static void initCurrenciesData() {
+        Connection connection = null;
         try {
-            connection = DriverManager.getConnection(DB_URL);
+            connection = connectionPool.getConnection();
+        } catch (SQLException e) {
+            log.error("Error get connection: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+        try {
             String queryInsert = """
                     insert into currencies (code, full_name, sign) VALUES (?, ?, ?)
                     """;
@@ -117,16 +147,29 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
             preparedStatement.addBatch();
 
             preparedStatement.executeBatch();
-            log.info("Init table currencies successful");
+
+            log.info("Insert data to table currencies successful");
         } catch (SQLException e) {
-            log.error(e.getMessage());
+            log.error("Error insert data to table currencies: " + e.getMessage());
             throw new RuntimeException(e);
+        } finally {
+            if (connectionPool.releaseConnection(connection)) {
+                log.info("Connection pool release successfully");
+            } else {
+                log.error("ConnectionPool release error");
+            }
         }
     }
 
     public static void initExchangeRatesData() {
+        Connection connection = null;
         try {
-            connection = DriverManager.getConnection(DB_URL);
+            connection = connectionPool.getConnection();
+        } catch (SQLException e) {
+            log.error("Error get connection: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+        try {
             String queryInsert = """
                     insert into exchange_rates (base_currency_id, target_currency_id, rate) VALUES (?, ?, ?)
                     """;
@@ -153,17 +196,25 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
             preparedStatement.addBatch();
 
             preparedStatement.executeBatch();
-            log.info("Init table exchange_rates successful");
+            connectionPool.releaseConnection(connection);
+            log.info("Insert data to table exchange_rates successful");
         } catch (SQLException e) {
-            log.error(e.getMessage());
+            log.error("Error insert data to table exchange_rates: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
     @Override
     public Currencies save(Currencies currencies) throws SQLException {
+        Connection connection = null;
         try {
-            connection = DriverManager.getConnection(DB_URL);
+            connection = connectionPool.getConnection();
+        } catch (SQLException e) {
+            log.error("Error get connection: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+
+        try {
             connection.setAutoCommit(false);
 
             String querySaveCurrencies = """
@@ -198,12 +249,23 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
             connection.rollback();
             log.error("Transaction rollback...");
             throw new SQLException();
+        } finally {
+            connectionPool.releaseConnection(connection);
         }
     }
 
     @Override
     public Iterable<Currencies> getAll() {
+        Connection connection = null;
+        try {
+            connection = connectionPool.getConnection();
+        } catch (SQLException e) {
+            log.error("Error get connection: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+
         List<Currencies> currenciesList = new ArrayList<>(Collections.emptyList());
+
         try {
             connection = DriverManager.getConnection(DB_URL);
 
@@ -224,12 +286,21 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
             log.info("Get all currency successful");
         } catch (SQLException e) {
             throw new RuntimeException();
+        } finally {
+            connectionPool.releaseConnection(connection);
         }
         return currenciesList;
     }
 
     @Override
     public Optional<Currencies> getByCode(String code) {
+        Connection connection = null;
+        try {
+            connection = connectionPool.getConnection();
+        } catch (SQLException e) {
+            log.error("Error get connection: " + e.getMessage());
+            throw new RuntimeException(e);
+        }
         Currencies currencies = null;
         try {
             connection = DriverManager.getConnection(DB_URL);
@@ -257,6 +328,8 @@ public class CurrenciesRepositoryJDBC implements CurrenciesRepository {
             log.error("Error Get by code:" + code);
             log.error(e.getMessage());
             throw new RuntimeException();
+        } finally {
+            connectionPool.releaseConnection(connection);
         }
 
         return Optional.ofNullable(currencies);

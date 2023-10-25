@@ -1,7 +1,6 @@
 package by.belyahovich.controller;
 
 import by.belyahovich.domain.Currencies;
-import by.belyahovich.dto.CurrenciesMapper;
 import by.belyahovich.dto.CurrenciesRequest;
 import by.belyahovich.dto.CurrenciesResponse;
 import by.belyahovich.service.CurrenciesService;
@@ -15,27 +14,24 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet(name = "CurrenciesController", urlPatterns = "/api/v1/currencies")
 public class CurrenciesController extends HttpServlet {
 
-    Logger log = LogManager.getLogger(CurrenciesController.class);
     private final CurrenciesService currenciesService = new CurrenciesServiceImpl();
     private final ObjectMapper objectMapper = new ObjectMapper();
-    CurrenciesMapper currenciesMapper;
+    Logger log = LogManager.getLogger(CurrenciesController.class);
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        List<Currencies> allCurrenciesJsonString = new ArrayList<>();
+        List<Currencies> allCurrenciesJsonString;
 
         try {
             allCurrenciesJsonString = currenciesService.getAll();
-        } catch (Exception e){
+        } catch (Exception e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             log.error("Get error: " + e.getMessage());
             return;
@@ -54,21 +50,32 @@ public class CurrenciesController extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)  {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
+        String codeCurrencies = req.getParameter("code");
+        String nameCurrencies = req.getParameter("name");
+        String signCurrencies = req.getParameter("sign");
+
+        //validation
+        if (codeCurrencies == null || nameCurrencies == null || signCurrencies == null ||
+                codeCurrencies.equals("") || nameCurrencies.equals("") || signCurrencies.equals("")) {
+            ErrorHandler.sendError(HttpServletResponse.SC_BAD_REQUEST, "A required form field is empty or missing", resp);
+            return;
+        }
+
         CurrenciesRequest currenciesRequest = CurrenciesRequest.newBuilder()
-                .setCode(req.getParameter("code"))
-                .setName(req.getParameter("name"))
-                .setSign(req.getParameter("sign")).build();
-        // TODO: 10/25/2023 add last exception
+                .setCode(codeCurrencies)
+                .setName(nameCurrencies)
+                .setSign(signCurrencies).build();
         try {
             CurrenciesResponse savedCurrencies = currenciesService.save(currenciesRequest);
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
             resp.getWriter().print(objectMapper.writeValueAsString(savedCurrencies));
-        } catch (SQLException e){
+        } catch (SQLException e) {
             ErrorHandler.sendError(HttpServletResponse.SC_CONFLICT, "A currency with this code already exists", resp);
-        } catch (Exception e){
-            throw new RuntimeException();
+        } catch (Exception e) {
+            log.error("Error from server: " + e.getMessage());
+            ErrorHandler.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server error ...", resp);
         }
 
     }
