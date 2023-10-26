@@ -7,9 +7,9 @@ import java.util.Optional;
 
 public interface CrudRepository<T> {
 
-    Currencies save(T currencies) throws SQLException;
-
     Iterable<T> getAll() throws SQLException;
 
-    Optional<T> getByCode(String code);
+    Optional<T> getByCode(String code) throws SQLException;
+
+    Currencies save(T currencies) throws SQLException;
 }

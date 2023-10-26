@@ -24,5 +24,7 @@ public class DatabaseInitializer implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
+        //clear connection pool, close all connection
+        currenciesCrudRepository.shutdownJDBC();
     }
 }

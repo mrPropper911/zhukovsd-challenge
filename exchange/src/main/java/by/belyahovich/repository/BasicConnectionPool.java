@@ -79,6 +79,16 @@ public class BasicConnectionPool implements ConnectionPool{
         return this.url;
     }
 
+    @Override
+    public void shutDown() throws SQLException {
+        usedConnections.forEach(this::releaseConnection);
+        for (Connection connection: connectionPool) {
+            connection.close();
+        }
+        connectionPool.clear();
+        log.info("All connection to DB close, connection pool cleared");
+    }
+
     private static Connection createConnection(String url){
         try {
             return DriverManager.getConnection(url);

@@ -1,6 +1,5 @@
 package by.belyahovich.controller;
 
-import by.belyahovich.domain.Currencies;
 import by.belyahovich.dto.CurrenciesRequest;
 import by.belyahovich.dto.CurrenciesResponse;
 import by.belyahovich.service.CurrenciesService;
@@ -31,7 +30,6 @@ public class CurrenciesController extends HttpServlet {
         log = LogManager.getLogger(CurrenciesController.class);
     }
 
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         try {
@@ -52,7 +50,6 @@ public class CurrenciesController extends HttpServlet {
         String nameCurrencies = req.getParameter("name");
         String signCurrencies = req.getParameter("sign");
 
-        //validation
         if (codeCurrencies == null || nameCurrencies == null || signCurrencies == null ||
                 codeCurrencies.equals("") || nameCurrencies.equals("") || signCurrencies.equals("")) {
             ErrorHandler.sendError(HttpServletResponse.SC_BAD_REQUEST,

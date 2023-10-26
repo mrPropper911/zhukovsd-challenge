@@ -1,6 +1,5 @@
 package by.belyahovich.service;
 
-import by.belyahovich.domain.Currencies;
 import by.belyahovich.dto.CurrenciesRequest;
 import by.belyahovich.dto.CurrenciesResponse;
 
@@ -11,7 +10,7 @@ import java.util.Optional;
 public interface CurrenciesService {
     List<CurrenciesResponse> getAll() throws SQLException;
 
-    Optional<Currencies> getByCode(String code);//todo return CurrenciesResponse
+    Optional<CurrenciesResponse> getByCode(String code) throws SQLException;
 
     CurrenciesResponse save(CurrenciesRequest currenciesRequest) throws SQLException;
 }

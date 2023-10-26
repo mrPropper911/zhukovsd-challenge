@@ -30,6 +30,6 @@ public interface CurrenciesMapper {
             @Mapping(source = "fullName", target = "name"),
             @Mapping(source = "sign", target = "sign")
     })
-    CurrenciesResponse curremciesToCurrenciesResponse(Currencies currencies);
+    CurrenciesResponse currenciesToCurrenciesResponse(Currencies currencies);
 
 }

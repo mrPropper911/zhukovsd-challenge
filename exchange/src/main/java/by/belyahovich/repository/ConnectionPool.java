@@ -9,4 +9,6 @@ public interface ConnectionPool {
     boolean releaseConnection(Connection connection);
 
     String getUrl();
+
+    void shutDown() throws SQLException;
 }

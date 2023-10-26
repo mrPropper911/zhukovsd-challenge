@@ -4,6 +4,7 @@ import by.belyahovich.domain.Currencies;
 import by.belyahovich.repository.BasicConnectionPool;
 import by.belyahovich.repository.ConnectionPool;
 import by.belyahovich.repository.CrudRepository;
+import by.belyahovich.utils.ReservationException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -46,48 +47,6 @@ public class CurrenciesRepositoryJDBC implements CrudRepository<Currencies> {
     }
 
     @Override
-    public Currencies save(Currencies currencies) throws SQLException {
-        Connection connection = connectionPool.getConnection();
-
-        try {
-            connection.setAutoCommit(false);
-            String querySaveCurrencies = """
-                    insert into currencies (code, full_name, sign) VALUES (?, ?, ?)
-                    """;
-            PreparedStatement preparedStatement =
-                    connection.prepareStatement(querySaveCurrencies);
-            preparedStatement.setString(1, currencies.getCode());
-            preparedStatement.setString(2, currencies.getFullName());
-            preparedStatement.setString(3, currencies.getSign());
-            int affectedRows = preparedStatement.executeUpdate();
-
-            if (affectedRows == 0) {
-                log.error("Error: not row affected after update");
-                throw new SQLException("Creating currencies failed, not row affected");
-            }
-
-            //get id saved currencies
-            Statement statement = connection.createStatement();
-            ResultSet generatedKeys = statement.executeQuery("select  last_insert_rowid()");
-            if (generatedKeys.next()) {
-                currencies.setId(generatedKeys.getInt(1));
-            }
-            connection.commit();
-
-            log.info("Transaction commit");
-            log.info("Save currencies succeed: " + currencies.getCode());
-            return currencies;
-
-        } catch (SQLException e) {
-            connection.rollback();
-            log.error("Transaction rollback...");
-            throw new SQLException();
-        } finally {
-            connectionPool.releaseConnection(connection);
-        }
-    }
-
-    @Override
     public Iterable<Currencies> getAll() throws SQLException {
         List<Currencies> currenciesList = new ArrayList<>(Collections.emptyList());
         Connection connection = connectionPool.getConnection();
@@ -96,6 +55,7 @@ public class CurrenciesRepositoryJDBC implements CrudRepository<Currencies> {
             String querySelectAll = """
                     select * from currencies
                     """;
+
             PreparedStatement preparedStatement = connection.prepareStatement(querySelectAll);
             ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -114,9 +74,9 @@ public class CurrenciesRepositoryJDBC implements CrudRepository<Currencies> {
     }
 
     @Override
-    public Optional<Currencies> getByCode(String code) {
+    public Optional<Currencies> getByCode(String code) throws SQLException{
         Connection connection = connectionPool.getConnection();
-        Currencies currencies = null;
+        Currencies currencies;
         try {
             String querySelectByCode = """
                     select * from currencies where code = (?)
@@ -137,14 +97,51 @@ public class CurrenciesRepositoryJDBC implements CrudRepository<Currencies> {
                     .setSign(resultSet.getString("sign"))
                     .build();
 
-        } catch (SQLException e) {
-            log.error("Error Get by code:" + code);
-            throw new RuntimeException();
-        } finally {
+        }  finally {
             connectionPool.releaseConnection(connection);
         }
 
-        return Optional.ofNullable(currencies);
+        return Optional.of(currencies);
+    }
+
+    @Override
+    public Currencies save(Currencies currencies) throws SQLException {
+        Connection connection = connectionPool.getConnection();
+
+        try {
+            connection.setAutoCommit(false);
+
+            String querySaveCurrencies = """
+                    insert into currencies (code, full_name, sign) VALUES (?, ?, ?)
+                    """;
+
+            PreparedStatement preparedStatement =
+                    connection.prepareStatement(querySaveCurrencies);
+            preparedStatement.setString(1, currencies.getCode());
+            preparedStatement.setString(2, currencies.getFullName());
+            preparedStatement.setString(3, currencies.getSign());
+            int affectedRows = preparedStatement.executeUpdate();
+
+            if (affectedRows == 0) {
+                log.info("Not row affected after update");
+                throw new SQLException("Not row affected after update");
+            }
+
+            //get id saved currencies
+            Statement statement = connection.createStatement();
+            ResultSet generatedKeys = statement.executeQuery("select  last_insert_rowid()");
+
+            if (generatedKeys.next()) {
+                currencies.setId(generatedKeys.getInt(1));
+            }
+
+            connection.commit();
+            return currencies;
+
+        } finally {
+            connection.rollback();
+            connectionPool.releaseConnection(connection);
+        }
     }
 
     public void initTables() {
@@ -184,7 +181,7 @@ public class CurrenciesRepositoryJDBC implements CrudRepository<Currencies> {
             log.info("Initialization of tables was successful");
         } catch (SQLException e) {
             log.error("An error occurred while initializing tables: " + e.getMessage());
-            throw new RuntimeException("Server error: an error occurred while initializing tables");
+            throw new ReservationException("Server error: an error occurred while initializing tables");
         } finally {
             connectionPool.releaseConnection(connection);
         }
@@ -227,7 +224,7 @@ public class CurrenciesRepositoryJDBC implements CrudRepository<Currencies> {
             log.info("Insert data to table currencies successful");
         } catch (SQLException e) {
             log.error("Error insert data to table currencies: " + e.getMessage());
-            throw new RuntimeException("Server error: error insert data to table currencies");
+            throw new ReservationException("Server error: error insert data to table currencies");
         } finally {
             connectionPool.releaseConnection(connection);
         }
@@ -267,9 +264,18 @@ public class CurrenciesRepositoryJDBC implements CrudRepository<Currencies> {
             log.info("Insert data to table exchange_rates successful");
         } catch (SQLException e) {
             log.error("Error insert data to table exchange_rates: " + e.getMessage());
-            throw new RuntimeException("Server error: error insert data to table exchange_rates");
+            throw new ReservationException("Server error: error insert data to table exchange_rates");
         } finally {
             connectionPool.releaseConnection(connection);
+        }
+    }
+
+    public void shutdownJDBC(){
+        try {
+            connectionPool.shutDown();
+        } catch (SQLException e) {
+            log.error("Error closing database connections " + e.getMessage());
+            throw new ReservationException("Error closing database connections");
         }
     }
 }

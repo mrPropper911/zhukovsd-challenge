@@ -15,27 +15,31 @@ import java.util.Optional;
 
 public class CurrenciesServiceImpl implements CurrenciesService {
 
-    private final CrudRepository<Currencies> currenciesRepository =
-            CurrenciesRepositoryJDBC.getInstance();
+    private final CrudRepository<Currencies> currenciesRepository;
+
+    public CurrenciesServiceImpl() {
+        currenciesRepository = CurrenciesRepositoryJDBC.getInstance();
+    }
 
     @Override
-    public List<CurrenciesResponse> getAll() throws SQLException{
+    public List<CurrenciesResponse> getAll() throws SQLException {
         List<CurrenciesResponse> currenciesResponseList = new ArrayList<>();
         currenciesRepository.getAll()
                 .forEach(currencies ->
-                    currenciesResponseList.add(CurrenciesMapper.INSTANCE.curremciesToCurrenciesResponse(currencies)));
+                        currenciesResponseList.add(CurrenciesMapper.INSTANCE.currenciesToCurrenciesResponse(currencies)));
         return currenciesResponseList;
     }
 
     @Override
-    public Optional<Currencies> getByCode(String code) {
-        return currenciesRepository.getByCode(code);
+    public Optional<CurrenciesResponse> getByCode(String code) throws SQLException {
+        Optional<Currencies> optionalCurrencies = currenciesRepository.getByCode(code);
+        return optionalCurrencies.map(CurrenciesMapper.INSTANCE::currenciesToCurrenciesResponse);
     }
 
     @Override
     public CurrenciesResponse save(CurrenciesRequest currenciesRequest) throws SQLException {
         Currencies currencies = CurrenciesMapper.INSTANCE.currenciesRequestToCurrencies(currenciesRequest);
         Currencies savedCurrency = currenciesRepository.save(currencies);
-        return CurrenciesMapper.INSTANCE.curremciesToCurrenciesResponse(savedCurrency);
+        return CurrenciesMapper.INSTANCE.currenciesToCurrenciesResponse(savedCurrency);
     }
 }
