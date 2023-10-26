@@ -1,5 +1,6 @@
 package by.belyahovich.repository;
 
+import by.belyahovich.utils.ReservationException;
 import org.apache.log4j.Logger;
 import org.sqlite.JDBC;
 
@@ -30,7 +31,7 @@ public class BasicConnectionPool implements ConnectionPool{
             DriverManager.registerDriver(new JDBC());
         } catch (SQLException e) {
             log.error("Could not init register SQLite JDBC driver: " + e.getMessage());
-            throw new RuntimeException(e);
+            throw new ReservationException("Could not init register SQLite JDBC driver");
         }
 
         List<Connection> pool = new ArrayList<>(INITIAL_POOL_SIZE);
@@ -41,21 +42,26 @@ public class BasicConnectionPool implements ConnectionPool{
     }
 
     @Override
-    public Connection getConnection() throws SQLException {
+    public Connection getConnection() {
         if (connectionPool.isEmpty()){
             if (usedConnections.size() < MAX_POOL_SIZE){
                 connectionPool.add(createConnection(url));
             } else {
                 log.error("Maximum pool size reached, no available connections!");
-                throw new RuntimeException(
+                throw new ReservationException(
                         "Maximum pool size reached, no available connections!");
             }
         }
 
         Connection connection = connectionPool.remove(connectionPool.size() - 1);
 
-        if (!connection.isValid(MAX_TIMEOUT)){
-            connection = createConnection(url);
+        try {
+            if (!connection.isValid(MAX_TIMEOUT)){
+                connection = createConnection(url);
+            }
+        } catch (SQLException e) {
+            log.error("Error get connection: " + e.getMessage());
+            throw new ReservationException("Server error: error get connection");
         }
 
         usedConnections.add(connection);
@@ -78,7 +84,7 @@ public class BasicConnectionPool implements ConnectionPool{
             return DriverManager.getConnection(url);
         } catch (SQLException e) {
             log.error("Error creating connection" + e.getMessage());
-            throw new RuntimeException(e);
+            throw new ReservationException("Server error: error creating connection to database");
         }
     }
 

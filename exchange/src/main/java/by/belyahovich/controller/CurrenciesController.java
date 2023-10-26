@@ -21,31 +21,28 @@ import java.util.List;
 @WebServlet(name = "CurrenciesController", urlPatterns = "/api/v1/currencies")
 public class CurrenciesController extends HttpServlet {
 
-    private final CurrenciesService currenciesService = new CurrenciesServiceImpl();
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    Logger log = LogManager.getLogger(CurrenciesController.class);
+    private final CurrenciesService currenciesService;
+    private final ObjectMapper objectMapper;
+    private final Logger log;
+
+    public CurrenciesController() {
+        currenciesService = new CurrenciesServiceImpl();
+        objectMapper = new ObjectMapper();
+        log = LogManager.getLogger(CurrenciesController.class);
+    }
+
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        List<Currencies> allCurrenciesJsonString;
-
         try {
-            allCurrenciesJsonString = currenciesService.getAll();
-        } catch (Exception e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            log.error("Get error: " + e.getMessage());
-            return;
-        }
-
-        try {
+            List<CurrenciesResponse> allCurrenciesJsonString = currenciesService.getAll();
             PrintWriter writer = resp.getWriter();
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
             writer.print(objectMapper.writeValueAsString(allCurrenciesJsonString));
             writer.flush();
         } catch (Exception e) {
-            resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-            log.error("Get error with writer: " + e.getMessage());
+            log.error("Server error: " + e.getMessage());
+            ErrorHandler.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Server side error", resp);
         }
     }
 
@@ -58,7 +55,8 @@ public class CurrenciesController extends HttpServlet {
         //validation
         if (codeCurrencies == null || nameCurrencies == null || signCurrencies == null ||
                 codeCurrencies.equals("") || nameCurrencies.equals("") || signCurrencies.equals("")) {
-            ErrorHandler.sendError(HttpServletResponse.SC_BAD_REQUEST, "A required form field is empty or missing", resp);
+            ErrorHandler.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "A required form field is empty or missing", resp);
             return;
         }
 
@@ -68,8 +66,6 @@ public class CurrenciesController extends HttpServlet {
                 .setSign(signCurrencies).build();
         try {
             CurrenciesResponse savedCurrencies = currenciesService.save(currenciesRequest);
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
             resp.getWriter().print(objectMapper.writeValueAsString(savedCurrencies));
         } catch (SQLException e) {
             ErrorHandler.sendError(HttpServletResponse.SC_CONFLICT, "A currency with this code already exists", resp);

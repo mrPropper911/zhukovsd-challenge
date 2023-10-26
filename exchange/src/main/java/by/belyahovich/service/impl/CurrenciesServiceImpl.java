@@ -4,7 +4,7 @@ import by.belyahovich.domain.Currencies;
 import by.belyahovich.dto.CurrenciesMapper;
 import by.belyahovich.dto.CurrenciesRequest;
 import by.belyahovich.dto.CurrenciesResponse;
-import by.belyahovich.repository.CurrenciesRepository;
+import by.belyahovich.repository.CrudRepository;
 import by.belyahovich.repository.impl.CurrenciesRepositoryJDBC;
 import by.belyahovich.service.CurrenciesService;
 
@@ -15,14 +15,16 @@ import java.util.Optional;
 
 public class CurrenciesServiceImpl implements CurrenciesService {
 
-    private final CurrenciesRepository currenciesRepository = CurrenciesRepositoryJDBC.getInstance();
-
+    private final CrudRepository<Currencies> currenciesRepository =
+            CurrenciesRepositoryJDBC.getInstance();
 
     @Override
-    public List<Currencies> getAll() {
-        List<Currencies> currenciesList = new ArrayList<>();
-        currenciesRepository.getAll().forEach(currenciesList::add);
-        return currenciesList;
+    public List<CurrenciesResponse> getAll() throws SQLException{
+        List<CurrenciesResponse> currenciesResponseList = new ArrayList<>();
+        currenciesRepository.getAll()
+                .forEach(currencies ->
+                    currenciesResponseList.add(CurrenciesMapper.INSTANCE.curremciesToCurrenciesResponse(currencies)));
+        return currenciesResponseList;
     }
 
     @Override

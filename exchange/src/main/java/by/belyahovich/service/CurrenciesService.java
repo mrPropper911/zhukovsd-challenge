@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CurrenciesService {
-    List<Currencies> getAll();
+    List<CurrenciesResponse> getAll() throws SQLException;
 
     Optional<Currencies> getByCode(String code);//todo return CurrenciesResponse
 

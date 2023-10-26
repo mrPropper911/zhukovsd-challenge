@@ -28,8 +28,6 @@ public class CurrencyController extends HttpServlet {
                 resp.sendError(400, "The currency code is missing from the address");
                 return;
             }
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
             Optional<Currencies> currenciesByCode = currenciesService.getByCode(pathInfo.substring(1).toUpperCase());
 
             if (currenciesByCode.isEmpty()) {
