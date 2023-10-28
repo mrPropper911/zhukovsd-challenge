@@ -10,6 +10,8 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>gallow</module>
+        <module>simulation</module>
+        <module>exchange</module>
     </modules>
 
     <properties>
