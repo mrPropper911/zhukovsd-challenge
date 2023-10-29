@@ -1,17 +1,19 @@
-package by.belyahovich.domain;
+package by.belyahovich.dto;
 
+import by.belyahovich.domain.Currencies;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Objects;
 
-public class ExchangeRates {
+public class ExchangeRatesResponse {
+    @JsonProperty("id")
     private int id;
+    @JsonProperty("baseCurrency")
     private Currencies baseCurrency;
+    @JsonProperty("targetCurrency")
     private Currencies targetCurrency;
+    @JsonProperty("rate")
     private double rate;
-
-    public static Builder newBuilder(){
-        return new ExchangeRates().new Builder();
-    }
 
     public int getId() {
         return id;
@@ -49,8 +51,8 @@ public class ExchangeRates {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ExchangeRates that = (ExchangeRates) o;
-        return id == that.id && Double.compare(that.rate, rate) == 0 && baseCurrency.equals(that.baseCurrency) && targetCurrency.equals(that.targetCurrency);
+        ExchangeRatesResponse that = (ExchangeRatesResponse) o;
+        return id == that.id && Double.compare(that.rate, rate) == 0 && baseCurrency.equals(that.baseCurrency) && Objects.equals(targetCurrency, that.targetCurrency);
     }
 
     @Override
@@ -60,7 +62,7 @@ public class ExchangeRates {
 
     @Override
     public String toString() {
-        return "ExchangeRates{" +
+        return "ExchangeRatesResponse{" +
                 "id=" + id +
                 ", baseCurrency=" + baseCurrency +
                 ", targetCurrency=" + targetCurrency +
@@ -68,32 +70,39 @@ public class ExchangeRates {
                 '}';
     }
 
-    public class Builder {
+    public static Builder newBuilder(){
+        return new ExchangeRatesResponse().new Builder();
+    }
+
+    public class Builder{
         private Builder() {
         }
 
-        public Builder setId(int id) {
-            ExchangeRates.this.id = id;
+        public Builder setId(int id){
+            ExchangeRatesResponse.this.id = id;
             return this;
         }
 
-        public Builder setBaseCurrency(Currencies baseCurrency) {
-            ExchangeRates.this.baseCurrency = baseCurrency;
+        public Builder setBaseCurrency(Currencies currencies){
+            ExchangeRatesResponse.this.baseCurrency = currencies;
             return this;
         }
 
         public Builder setTargetCurrency(Currencies targetCurrency){
-            ExchangeRates.this.targetCurrency = targetCurrency;
+            ExchangeRatesResponse.this.targetCurrency = targetCurrency;
             return this;
         }
 
         public Builder setRate(double rate){
-            ExchangeRates.this.rate = rate;
+            ExchangeRatesResponse.this.rate = rate;
             return this;
         }
 
-        public  ExchangeRates build (){
-            return ExchangeRates.this;
+        public ExchangeRatesResponse build(){
+            return ExchangeRatesResponse.this;
         }
+
+
     }
+
 }

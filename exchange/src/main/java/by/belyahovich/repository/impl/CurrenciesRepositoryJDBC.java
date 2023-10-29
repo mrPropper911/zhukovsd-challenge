@@ -4,6 +4,7 @@ import by.belyahovich.domain.Currencies;
 import by.belyahovich.repository.BasicConnectionPool;
 import by.belyahovich.repository.ConnectionPool;
 import by.belyahovich.repository.CrudRepository;
+
 import by.belyahovich.utils.ReservationException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -22,7 +23,8 @@ public class CurrenciesRepositoryJDBC implements CrudRepository<Currencies> {
 
     static {
         try {
-            InputStream resourceAsStream = CurrenciesRepositoryJDBC.class.getResourceAsStream("/config.properties");
+            InputStream resourceAsStream =
+                    CurrenciesRepositoryJDBC.class.getResourceAsStream("/config.properties");
             Properties properties = new Properties();
             properties.load(resourceAsStream);
             DB_URL = properties.getProperty("db.url");

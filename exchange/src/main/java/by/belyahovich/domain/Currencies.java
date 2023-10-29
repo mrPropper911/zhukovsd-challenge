@@ -3,6 +3,7 @@ package by.belyahovich.domain;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Currencies {
+    // TODO: 10/29/23  JACKSON to RESPONSE
 
     @JsonProperty("id")
     private int id;
