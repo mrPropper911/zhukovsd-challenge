@@ -27,6 +27,7 @@ public class MainFilter implements Filter {
         }
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
+        resp.addHeader("Access-Control-Allow-Origin", "*");
 
         try {
             chain.doFilter(request, response);

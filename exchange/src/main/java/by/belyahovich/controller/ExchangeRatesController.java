@@ -1,6 +1,5 @@
 package by.belyahovich.controller;
 
-import by.belyahovich.domain.ExchangeRates;
 import by.belyahovich.dto.ExchangeRatesResponse;
 import by.belyahovich.service.ExchangeRatesService;
 import by.belyahovich.service.impl.ExchangeRatesServiceImpl;
@@ -17,8 +16,8 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.List;
 
-@WebServlet(name = "ExchangeRatesController",  urlPatterns = "/api/v1/exchangeRates")
-public class ExchangeRatesController  extends HttpServlet {
+@WebServlet(name = "ExchangeRatesController", urlPatterns = "/api/v1/exchangeRates")
+public class ExchangeRatesController extends HttpServlet {
 
     private final ExchangeRatesService exchangeRatesService;
     private final ObjectMapper objectMapper;
@@ -26,13 +25,13 @@ public class ExchangeRatesController  extends HttpServlet {
     private final Logger log;
 
     public ExchangeRatesController() {
-         exchangeRatesService = new ExchangeRatesServiceImpl();
-         objectMapper = new ObjectMapper();
-         log = Logger.getLogger(ExchangeRatesController.class);
+        exchangeRatesService = new ExchangeRatesServiceImpl();
+        objectMapper = new ObjectMapper();
+        log = Logger.getLogger(ExchangeRatesController.class);
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)  {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         try {
             List<ExchangeRatesResponse> allExchangeRateList = exchangeRatesService.getAll();
             PrintWriter writer = resp.getWriter();
@@ -45,5 +44,8 @@ public class ExchangeRatesController  extends HttpServlet {
         }
     }
 
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
 
+    }
 }
