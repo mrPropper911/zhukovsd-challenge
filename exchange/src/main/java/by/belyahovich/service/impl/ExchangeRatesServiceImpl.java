@@ -11,6 +11,7 @@ import by.belyahovich.service.ExchangeRatesService;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ExchangeRatesServiceImpl  implements ExchangeRatesService {
 
@@ -27,5 +28,11 @@ public class ExchangeRatesServiceImpl  implements ExchangeRatesService {
                 .forEach(exchangeRates -> exchangeRatesList.add(ExchangeRatesMapper.
                         INSTANCE.exchangeRatesToExchangeRatesResponse(exchangeRates)));
         return exchangeRatesList;
+    }
+
+    @Override
+    public Optional<ExchangeRatesResponse> getByCode(String code) throws SQLException {
+        Optional<ExchangeRates> exchangeRates = exchangeRatesCrudRepository.getByCode(code);
+        return exchangeRates.map(ExchangeRatesMapper.INSTANCE::exchangeRatesToExchangeRatesResponse);
     }
 }
