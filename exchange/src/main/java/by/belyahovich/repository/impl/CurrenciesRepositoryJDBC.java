@@ -4,6 +4,7 @@ import by.belyahovich.domain.Currencies;
 import by.belyahovich.repository.BasicConnectionPool;
 import by.belyahovich.repository.ConnectionPool;
 import by.belyahovich.repository.CrudRepository;
+
 import by.belyahovich.utils.ReservationException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -16,22 +17,23 @@ import java.util.*;
 public class CurrenciesRepositoryJDBC implements CrudRepository<Currencies> {
 
     private static final Logger log = LogManager.getLogger(CurrenciesRepositoryJDBC.class);
-    private static final ConnectionPool connectionPool;
-    private static final String DB_URL;
+    private static final ConnectionPool connectionPool  = getInstance().getPoolConnection();
+//    private static final String DB_URL;
     private static volatile CurrenciesRepositoryJDBC instance;
 
-    static {
-        try {
-            InputStream resourceAsStream = CurrenciesRepositoryJDBC.class.getResourceAsStream("/config.properties");
-            Properties properties = new Properties();
-            properties.load(resourceAsStream);
-            DB_URL = properties.getProperty("db.url");
-            connectionPool = BasicConnectionPool.create(DB_URL);
-        } catch (IOException e) {
-            log.error("Properties load exception: " + e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
+//    static {
+//        try {
+//            InputStream resourceAsStream =
+//                    CurrenciesRepositoryJDBC.class.getResourceAsStream("/config.properties");
+//            Properties properties = new Properties();
+//            properties.load(resourceAsStream);
+//            DB_URL = properties.getProperty("db.url");
+//            connectionPool = BasicConnectionPool.create(DB_URL);
+//        } catch (IOException e) {
+//            log.error("Properties load exception: " + e.getMessage());
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     public static CurrenciesRepositoryJDBC getInstance() {
         CurrenciesRepositoryJDBC localInstance = instance;

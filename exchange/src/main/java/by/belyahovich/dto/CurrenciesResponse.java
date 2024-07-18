@@ -75,7 +75,7 @@ public class CurrenciesResponse {
     }
 
     public class Builder{
-        public Builder() {
+        private Builder() {
         }
 
         public Builder setId(int id){

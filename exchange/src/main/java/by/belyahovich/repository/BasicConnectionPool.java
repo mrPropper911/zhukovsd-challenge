@@ -21,7 +21,7 @@ public class BasicConnectionPool implements ConnectionPool{
     private static final int MAX_POOL_SIZE = 10;
     public static final int MAX_TIMEOUT = 5;//sec
 
-    public BasicConnectionPool(String url, List<Connection> connectionPool) {
+    private BasicConnectionPool(String url, List<Connection> connectionPool) {
         this.url = url;
         this.connectionPool = connectionPool;
     }

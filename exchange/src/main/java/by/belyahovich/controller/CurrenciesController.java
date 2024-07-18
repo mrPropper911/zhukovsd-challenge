@@ -70,6 +70,6 @@ public class CurrenciesController extends HttpServlet {
             log.error("Error from server: " + e.getMessage());
             ErrorHandler.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Server error ...", resp);
         }
-
     }
+
 }
